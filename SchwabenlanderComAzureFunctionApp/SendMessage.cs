@@ -22,29 +22,37 @@ public class SendMessage
     [Function("PublishMessage")]
     public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req)
     {
-        var formData = await req.ReadFromJsonAsync<ContactFormMessage>();
-
-        if (formData is null || 
-            string.IsNullOrEmpty(formData.Name) || 
-            string.IsNullOrEmpty(formData.Email) || 
-            string.IsNullOrEmpty(formData.Message))
+        try
         {
-            throw new ArgumentException(message: "Form missing missing one or more required values.", paramName: nameof(req));
+            var formData = await req.ReadFromJsonAsync<ContactFormMessage>();
+
+            if (formData is null || 
+                string.IsNullOrEmpty(formData.Name) || 
+                string.IsNullOrEmpty(formData.Email) || 
+                string.IsNullOrEmpty(formData.Message))
+            {
+                throw new ArgumentException(message: "Form missing missing one or more required values.", paramName: nameof(req));
+            }
+            
+            _logger.LogInformation("Publishing message to Azure Message Bus");
+
+            var serviceBusClient = new ServiceBusClient(_configuration.GetConnectionString("ServiceBus"));
+            var serviceBusSender = serviceBusClient.CreateSender(Environment.GetEnvironmentVariable("TOPIC_NAME"));
+            var serializedMessage = JsonSerializer.Serialize(formData);
+            
+            var serviceBusMessage = new ServiceBusMessage(serializedMessage);
+
+            await serviceBusSender.SendMessageAsync(serviceBusMessage);
+            await serviceBusSender.DisposeAsync();
+            await serviceBusClient.DisposeAsync();
+            
+            return new OkResult();
         }
-        
-        _logger.LogInformation("Publishing message to Azure Message Bus");
-
-        var serviceBusClient = new ServiceBusClient(_configuration.GetConnectionString("ServiceBus"));
-        var serviceBusSender = serviceBusClient.CreateSender(Environment.GetEnvironmentVariable("TOPIC_NAME"));
-        var serializedMessage = JsonSerializer.Serialize(formData);
-        
-        var serviceBusMessage = new ServiceBusMessage(serializedMessage);
-
-        await serviceBusSender.SendMessageAsync(serviceBusMessage);
-        await serviceBusSender.DisposeAsync();
-        await serviceBusClient.DisposeAsync();
-        
-        return new OkResult();
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error publishing message: {Message}", ex.Message);
+            return new BadRequestResult();
+        }
     }
 
 }

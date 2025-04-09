@@ -25,7 +25,7 @@ public class SendEmail
 
     [Function(nameof(SendEmail))]
     public async Task Run(
-        [ServiceBusTrigger("messages", "commservicesubscription", Connection = "ServiceBusConnection")]
+        [ServiceBusTrigger("messages", "commservicesubscription", Connection = "ServiceBusConnection", IsBatched = false)]
         ServiceBusReceivedMessage message, ServiceBusMessageActions messageActions)
     {
         _logger.LogInformation("Message ID: {Id}", message.MessageId);

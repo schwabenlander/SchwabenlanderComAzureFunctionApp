@@ -7,6 +7,12 @@
                 "excludedTypes": "Request"
             },
             "enableLiveMetricsFilters": true
+        },
+        "extensions": {
+            "serviceBus": {
+                "maxConcurrentCalls": 1,
+                "maxMessageBatchSize": 1
+            }
         }
     }
 }

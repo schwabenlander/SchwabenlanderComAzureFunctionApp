@@ -8,12 +8,12 @@ using Microsoft.Extensions.Configuration;
 
 namespace SchwabenlanderComAzureFunctionApp;
 
-public class SendMessage
+public class PublishMessage
 {
-    private readonly ILogger<SendMessage> _logger;
+    private readonly ILogger<PublishMessage> _logger;
     private readonly IConfiguration _configuration;
 
-    public SendMessage(ILogger<SendMessage> logger, IConfiguration configuration)
+    public PublishMessage(ILogger<PublishMessage> logger, IConfiguration configuration)
     {
         _logger = logger;
         _configuration = configuration;

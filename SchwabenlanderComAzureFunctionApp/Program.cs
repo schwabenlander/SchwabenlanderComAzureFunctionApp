@@ -12,12 +12,6 @@ builder.ConfigureFunctionsWebApplication();
 
 builder.Services.AddSingleton(s =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("ServiceBus")!;
-    return new ServiceBusClient(connectionString);
-});
-
-builder.Services.AddSingleton(s =>
-{
     var connectionString = builder.Configuration.GetConnectionString("CosmosDb")!;
     return new CosmosClient(connectionString);
 });

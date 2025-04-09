@@ -10,12 +10,12 @@ namespace SchwabenlanderComAzureFunctionApp;
 
 public class PublishMessage
 {
-    private readonly ServiceBusClient _serviceBusClient;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<PublishMessage> _logger;
 
-    public PublishMessage(ServiceBusClient serviceBusClient,ILogger<PublishMessage> logger)
+    public PublishMessage(IConfiguration configuration,ILogger<PublishMessage> logger)
     {
-        _serviceBusClient = serviceBusClient;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -38,15 +38,16 @@ public class PublishMessage
             formData.id = Guid.NewGuid();
             
             _logger.LogInformation("Publishing message to Azure Message Bus");
-            
-            var serviceBusSender = _serviceBusClient.CreateSender(Environment.GetEnvironmentVariable("TOPIC_NAME"));
+
+            var serviceBusClient = new ServiceBusClient(_configuration.GetConnectionString("ServiceBus"));
+            var serviceBusSender = serviceBusClient.CreateSender(Environment.GetEnvironmentVariable("TOPIC_NAME"));
             var serializedMessage = JsonSerializer.Serialize(formData);
             
             var serviceBusMessage = new ServiceBusMessage(serializedMessage);
 
             await serviceBusSender.SendMessageAsync(serviceBusMessage);
             await serviceBusSender.DisposeAsync();
-            await _serviceBusClient.DisposeAsync();
+            await serviceBusClient.DisposeAsync();
             
             return new OkResult();
         }

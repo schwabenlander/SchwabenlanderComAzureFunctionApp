@@ -10,10 +10,12 @@ namespace SchwabenlanderComAzureFunctionApp;
 
 public class PublishMessage
 {
+    private readonly ServiceBusClient _serviceBusClient;
     private readonly ILogger<PublishMessage> _logger;
 
-    public PublishMessage(ILogger<PublishMessage> logger)
+    public PublishMessage(ServiceBusClient serviceBusClient,ILogger<PublishMessage> logger)
     {
+        _serviceBusClient = serviceBusClient;
         _logger = logger;
     }
 
@@ -32,17 +34,19 @@ public class PublishMessage
                 throw new ArgumentException(message: "Form missing missing one or more required values.", paramName: nameof(req));
             }
             
+            formData.MessageTimeStamp = DateTimeOffset.UtcNow;
+            formData.id = Guid.NewGuid();
+            
             _logger.LogInformation("Publishing message to Azure Message Bus");
-
-            var serviceBusClient = new ServiceBusClient(Environment.GetEnvironmentVariable("ServiceBusConnection"));
-            var serviceBusSender = serviceBusClient.CreateSender(Environment.GetEnvironmentVariable("TOPIC_NAME"));
+            
+            var serviceBusSender = _serviceBusClient.CreateSender(Environment.GetEnvironmentVariable("TOPIC_NAME"));
             var serializedMessage = JsonSerializer.Serialize(formData);
             
             var serviceBusMessage = new ServiceBusMessage(serializedMessage);
 
             await serviceBusSender.SendMessageAsync(serviceBusMessage);
             await serviceBusSender.DisposeAsync();
-            await serviceBusClient.DisposeAsync();
+            await _serviceBusClient.DisposeAsync();
             
             return new OkResult();
         }

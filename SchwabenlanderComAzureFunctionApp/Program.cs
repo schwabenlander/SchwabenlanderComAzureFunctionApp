@@ -1,13 +1,31 @@
+using Azure.Communication.Email;
+using Azure.Messaging.ServiceBus;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
-// Application Insights isn't enabled by default. See https://aka.ms/AAt8mw4.
-// builder.Services
-//     .AddApplicationInsightsTelemetryWorkerService()
-//     .ConfigureFunctionsApplicationInsights();
+builder.Services.AddSingleton(s =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("ServiceBus")!;
+    return new ServiceBusClient(connectionString);
+});
+
+builder.Services.AddSingleton(s =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("CosmosDb")!;
+    return new CosmosClient(connectionString);
+});
+
+builder.Services.AddSingleton(s =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("CommService")!;
+    return new EmailClient(connectionString);
+});
 
 builder.Build().Run();

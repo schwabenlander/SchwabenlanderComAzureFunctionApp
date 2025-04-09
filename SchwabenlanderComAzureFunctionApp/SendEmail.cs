@@ -15,12 +15,12 @@ namespace SchwabenlanderComAzureFunctionApp;
 public class SendEmail
 {
     private readonly ILogger<SendEmail> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly EmailClient _emailClient;
 
-    public SendEmail(ILogger<SendEmail> logger, IConfiguration configuration)
+    public SendEmail(EmailClient emailClient, ILogger<SendEmail> logger)
     {
+        _emailClient = emailClient;
         _logger = logger;
-        _configuration = configuration;
     }
 
     [Function(nameof(SendEmail))]
@@ -33,9 +33,6 @@ public class SendEmail
 
         try
         {
-            var connectionString = _configuration.GetConnectionString("CommService");
-            var emailClient = new EmailClient(connectionString);
-
             var formMessage = message.Body.ToObjectFromJson<ContactFormMessage>();
             
             var emailMessage = new EmailMessage(
@@ -44,11 +41,16 @@ public class SendEmail
                 {
                     PlainText = $"""
                                  You received a new message from Schwabenlander.com!
-
+                                 
+                                 ------------------------------------------
                                  Name: {formMessage?.Name}
                                  Email: {formMessage?.Email}
                                  Phone: {formMessage?.Phone}
                                  Message: {formMessage?.Message}
+                                 ------------------------------------------
+                                 
+                                 Timestamp: {formMessage?.MessageTimeStamp}
+                                 Message ID: {formMessage?.id}
                                  """
                 },
                 recipients: new EmailRecipients(new List<EmailAddress>
@@ -56,7 +58,7 @@ public class SendEmail
                     new (Environment.GetEnvironmentVariable("DESTINATION_ADDRESS"))
                 }));
             
-            await emailClient.SendAsync(WaitUntil.Completed, emailMessage);
+            await _emailClient.SendAsync(WaitUntil.Completed, emailMessage);
         }
         catch (Exception ex)
         {

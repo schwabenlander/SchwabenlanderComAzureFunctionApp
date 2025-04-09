@@ -1,10 +1,7 @@
-using System;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace SchwabenlanderComAzureFunctionApp;
@@ -12,11 +9,9 @@ namespace SchwabenlanderComAzureFunctionApp;
 public class SaveToDatabase
 {
     private readonly ILogger<SaveToDatabase> _logger;
-    private readonly CosmosClient _cosmosClient;
 
-    public SaveToDatabase(CosmosClient cosmosClient, ILogger<SaveToDatabase> logger)
+    public SaveToDatabase(ILogger<SaveToDatabase> logger)
     {
-        _cosmosClient = cosmosClient;
         _logger = logger;
     }
 
@@ -37,7 +32,8 @@ public class SaveToDatabase
                 throw new SerializationException("Failed to deserialize message");
             }
             
-            var container = _cosmosClient.GetContainer("schwabenlander-com-messagedb", "messages"); 
+            using var cosmosClient = new CosmosClient(Environment.GetEnvironmentVariable("CosmosDbConnection"));
+            var container = cosmosClient.GetContainer("schwabenlander-com-messagedb", "messages"); 
             
             // Insert item into Cosmos DB
             await container.CreateItemAsync(deserializedMessage, new PartitionKey(deserializedMessage.Email));

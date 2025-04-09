@@ -12,12 +12,6 @@ builder.ConfigureFunctionsWebApplication();
 
 builder.Services.AddSingleton(s =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("CosmosDb")!;
-    return new CosmosClient(connectionString);
-});
-
-builder.Services.AddSingleton(s =>
-{
     var connectionString = builder.Configuration.GetConnectionString("CommService")!;
     return new EmailClient(connectionString);
 });

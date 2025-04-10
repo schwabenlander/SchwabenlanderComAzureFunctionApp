@@ -36,7 +36,15 @@ public class SaveToDatabase
             var container = cosmosClient.GetContainer("schwabenlander-com-messagedb", "messages"); 
             
             // Insert item into Cosmos DB
-            await container.CreateItemAsync(deserializedMessage, new PartitionKey(deserializedMessage.Email));
+            await container.CreateItemAsync(new
+            {
+                id = deserializedMessage.Id,
+                name = deserializedMessage.Name,
+                email = deserializedMessage.Email,
+                phone = deserializedMessage.Phone,
+                messageId = deserializedMessage.Message,
+                timestamp = deserializedMessage.Timestamp
+            }, new PartitionKey(deserializedMessage.Email));
             
             // Complete the message
             await messageActions.CompleteMessageAsync(message);

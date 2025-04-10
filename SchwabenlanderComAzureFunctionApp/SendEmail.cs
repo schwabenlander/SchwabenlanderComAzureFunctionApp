@@ -1,13 +1,7 @@
-using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Azure;
 using Azure.Communication.Email;
 using Azure.Messaging.ServiceBus;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace SchwabenlanderComAzureFunctionApp;
@@ -49,8 +43,8 @@ public class SendEmail
                                  Message: {formMessage?.Message}
                                  ------------------------------------------
                                  
-                                 Timestamp: {formMessage?.MessageTimeStamp}
-                                 Message ID: {formMessage?.id}
+                                 Timestamp: {formMessage?.Timestamp}
+                                 Message ID: {formMessage?.Id}
                                  """
                 },
                 recipients: new EmailRecipients(new List<EmailAddress>

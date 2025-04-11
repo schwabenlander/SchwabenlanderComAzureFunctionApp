@@ -42,12 +42,17 @@ public class PublishMessage
                 return new BadRequestObjectResult("CAPTCHA validation failed.");
             }
             
-            // Set metadata values
-            formData.Timestamp = DateTimeOffset.UtcNow;
-            formData.Id = Guid.NewGuid();
-            
             _logger.LogInformation("Publishing message to Azure Message Bus");
-            await PublishToServiceBusAsync(formData);
+            await PublishToServiceBusAsync(new
+            {
+                name = formData.Name,
+                email = formData.Email,
+                phone = formData.Phone,
+                message = formData.Message,
+                // Set metadata values
+                id = Guid.NewGuid(),
+                timestamp = DateTimeOffset.UtcNow
+            });
             
             return new OkResult();
         }
@@ -71,14 +76,14 @@ public class PublishMessage
         var verificationResult = JsonConvert.DeserializeObject<dynamic>(
             await verificationResponse.Content.ReadAsStringAsync());
 
-        return verificationResult is not null && verificationResult.success;
+        return verificationResult is not null && (bool)verificationResult.success;
     }
     
-    private static async Task PublishToServiceBusAsync(ContactFormMessage formData)
+    private static async Task PublishToServiceBusAsync(object message)
     {
         var serviceBusClient = new ServiceBusClient(Environment.GetEnvironmentVariable("ServiceBusConnection"));
         var serviceBusSender = serviceBusClient.CreateSender(Environment.GetEnvironmentVariable("TOPIC_NAME"));
-        var serializedMessage = JsonSerializer.Serialize(formData);
+        var serializedMessage = JsonSerializer.Serialize(message);
 
         var serviceBusMessage = new ServiceBusMessage(serializedMessage);
 

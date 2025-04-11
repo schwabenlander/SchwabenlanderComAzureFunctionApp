@@ -1,24 +1,15 @@
+using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using JsonSerializer = System.Text.Json.JsonSerializer;
+using SchwabenlanderComAzureFunctionApp.Models;
 
 namespace SchwabenlanderComAzureFunctionApp;
 
-public class PublishMessage
+public class PublishMessage(HttpClient httpClient, ILogger<PublishMessage> logger)
 {
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<PublishMessage> _logger;
-
-    public PublishMessage(HttpClient httpClient, ILogger<PublishMessage> logger)
-    {
-        _httpClient = httpClient;
-        _logger = logger;
-    }
-
     [Function("PublishMessage")]
     public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req)
     {
@@ -37,18 +28,20 @@ public class PublishMessage
             }
 
             // Verify hCaptcha
-            if (!await VerifyHcaptchaAsync(formData.HcaptchaToken))
+            if (!await VerifyCaptchaAsync(formData.HcaptchaToken))
             {
                 return new BadRequestObjectResult("CAPTCHA validation failed.");
             }
             
-            _logger.LogInformation("Publishing message to Azure Message Bus");
+            logger.LogInformation("Publishing message to Azure Message Bus");
+            
             await PublishToServiceBusAsync(new
             {
                 name = formData.Name,
                 email = formData.Email,
                 phone = formData.Phone,
                 message = formData.Message,
+                
                 // Set metadata values
                 id = Guid.NewGuid(),
                 timestamp = DateTimeOffset.UtcNow
@@ -58,25 +51,25 @@ public class PublishMessage
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error publishing message: {Message}", ex.Message);
+            logger.LogError(ex, "Error publishing message: {Message}", ex.Message);
             return new BadRequestObjectResult("Error publishing message.");
         }
     }
     
-    private async Task<bool> VerifyHcaptchaAsync(string hCaptchaToken)
+    private async Task<bool> VerifyCaptchaAsync(string hCaptchaToken)
     {
         var secretKey = Environment.GetEnvironmentVariable("HCaptchaSecretKey")!;
-        var verificationResponse = await _httpClient.PostAsync(
+        var verificationResponse = await httpClient.PostAsync(
             Environment.GetEnvironmentVariable("HCaptchaVerificationUrl"),
             new FormUrlEncodedContent([
                 new KeyValuePair<string, string>("secret", secretKey),
                 new KeyValuePair<string, string>("response", hCaptchaToken)
             ]));
 
-        var verificationResult = JsonConvert.DeserializeObject<dynamic>(
+        var verificationResult = JsonSerializer.Deserialize<VerificationResult>(
             await verificationResponse.Content.ReadAsStringAsync());
 
-        return verificationResult is not null && (bool)verificationResult.success;
+        return verificationResult is not null && verificationResult.Success;
     }
     
     private static async Task PublishToServiceBusAsync(object message)

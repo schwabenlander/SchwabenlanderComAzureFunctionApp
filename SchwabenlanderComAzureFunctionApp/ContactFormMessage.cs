@@ -1,9 +1,35 @@
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+
 namespace SchwabenlanderComAzureFunctionApp;
 
-public record ContactFormMessage(string Name, string Email, string Phone, string Message)
+public class ContactFormMessage
 {
-    // ReSharper disable once InconsistentNaming
-    public Guid id { get; set; }
+    [JsonProperty("id")]
+    [JsonPropertyName("id")]
+    public Guid Id { get; set; }
+    
+    [JsonProperty("name")]
+    [JsonPropertyName("name")]
+    public required string Name { get; set; }
 
-    public DateTimeOffset MessageTimeStamp { get; set; }
+    [JsonProperty("email")]
+    [JsonPropertyName("email")]
+    public required string Email { get; set; }
+    
+    [JsonProperty("phone")]
+    [JsonPropertyName("phone")]
+    public string? Phone { get; set; }
+    
+    [JsonProperty("message")]
+    [JsonPropertyName("message")]
+    public required string Message { get; set; }
+
+    [JsonProperty("timestamp")]
+    [JsonPropertyName("timestamp")]
+    public DateTimeOffset Timestamp { get; set; }
+    
+    [JsonProperty("h-captcha-response")]
+    [JsonPropertyName("h-captcha-response")]
+    public string? HcaptchaToken { get; set; }
 }

@@ -28,7 +28,7 @@ public class PublishMessage(HttpClient httpClient, ILogger<PublishMessage> logge
             }
 
             // Verify hCaptcha
-            if (!await VerifyCaptchaAsync(formData.HcaptchaToken))
+            if (!await VerifyHCaptchaAsync(formData.HcaptchaToken))
             {
                 return new BadRequestObjectResult("CAPTCHA validation failed.");
             }
@@ -56,7 +56,7 @@ public class PublishMessage(HttpClient httpClient, ILogger<PublishMessage> logge
         }
     }
     
-    private async Task<bool> VerifyCaptchaAsync(string hCaptchaToken)
+    private async Task<bool> VerifyHCaptchaAsync(string hCaptchaToken)
     {
         var secretKey = Environment.GetEnvironmentVariable("HCaptchaSecretKey")!;
         var verificationResponse = await httpClient.PostAsync(
@@ -66,10 +66,10 @@ public class PublishMessage(HttpClient httpClient, ILogger<PublishMessage> logge
                 new KeyValuePair<string, string>("response", hCaptchaToken)
             ]));
 
-        var verificationResult = JsonSerializer.Deserialize<VerificationResult>(
+        var verificationResult = JsonSerializer.Deserialize<HCaptchaVerificationResult>(
             await verificationResponse.Content.ReadAsStringAsync());
 
-        return verificationResult is not null && verificationResult.Success;
+        return verificationResult is not null && verificationResult.IsSuccess;
     }
     
     private static async Task PublishToServiceBusAsync(object message)

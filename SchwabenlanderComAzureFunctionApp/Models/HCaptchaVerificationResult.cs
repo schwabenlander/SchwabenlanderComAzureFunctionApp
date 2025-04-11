@@ -2,10 +2,10 @@ using System.Text.Json.Serialization;
 
 namespace SchwabenlanderComAzureFunctionApp.Models;
 
-public class VerificationResult
+public class HCaptchaVerificationResult
 {
     [JsonPropertyName("success")]
-    public bool Success { get; set; }
+    public bool IsSuccess { get; set; }
     
     [JsonPropertyName("challenge_ts")]
     public string? ChallengeTimestamp { get; set; }

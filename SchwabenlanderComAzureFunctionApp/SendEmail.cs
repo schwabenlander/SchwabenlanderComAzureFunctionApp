@@ -3,27 +3,19 @@ using Azure.Communication.Email;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using SchwabenlanderComAzureFunctionApp.Models;
 
 namespace SchwabenlanderComAzureFunctionApp;
 
-public class SendEmail
+public class SendEmail(EmailClient emailClient, ILogger<SendEmail> logger)
 {
-    private readonly ILogger<SendEmail> _logger;
-    private readonly EmailClient _emailClient;
-
-    public SendEmail(EmailClient emailClient, ILogger<SendEmail> logger)
-    {
-        _emailClient = emailClient;
-        _logger = logger;
-    }
-
     [Function(nameof(SendEmail))]
     public async Task Run(
         [ServiceBusTrigger("messages", "commservicesubscription", Connection = "ServiceBusConnection", IsBatched = false)]
         ServiceBusReceivedMessage message, ServiceBusMessageActions messageActions)
     {
-        _logger.LogInformation("Message ID: {Id}", message.MessageId);
-        _logger.LogInformation("Message Body: {Body}", message.Body);
+        logger.LogInformation("Message ID: {Id}", message.MessageId);
+        logger.LogInformation("Message Body: {Body}", message.Body);
 
         try
         {
@@ -52,11 +44,11 @@ public class SendEmail
                     new (Environment.GetEnvironmentVariable("DESTINATION_ADDRESS"))
                 }));
             
-            await _emailClient.SendAsync(WaitUntil.Completed, emailMessage);
+            await emailClient.SendAsync(WaitUntil.Completed, emailMessage);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending message");
+            logger.LogError(ex, "Error sending message");
         }
         
         // Complete the message

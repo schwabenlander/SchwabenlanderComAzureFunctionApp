@@ -35,6 +35,7 @@ public class SendEmail(EmailClient emailClient, ILogger<SendEmail> logger)
                                  Message: {formMessage?.Message}
                                  ------------------------------------------
                                  
+                                 IP Address: {formMessage?.IpAddress}
                                  Timestamp: {formMessage?.Timestamp}
                                  Message ID: {formMessage?.Id}
                                  """

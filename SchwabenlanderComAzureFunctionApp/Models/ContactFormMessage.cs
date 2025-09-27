@@ -24,4 +24,7 @@ public class ContactFormMessage
 
     [JsonPropertyName("h-captcha-response")]
     public string? HcaptchaToken { get; set; }
+    
+    [JsonPropertyName("ipaddress")]
+    public string? IpAddress { get; set; }
 }

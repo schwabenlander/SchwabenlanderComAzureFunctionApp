@@ -30,7 +30,7 @@ public class SaveToDatabase(ILogger<SaveToDatabase> logger)
             
             var cosmosClientOptions = new CosmosClientOptions()
             {
-                UseSystemTextJsonSerializerWithOptions = new System.Text.Json.JsonSerializerOptions
+                UseSystemTextJsonSerializerWithOptions = new JsonSerializerOptions
                 {
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase

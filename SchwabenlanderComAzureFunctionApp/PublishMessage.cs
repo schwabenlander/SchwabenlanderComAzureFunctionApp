@@ -29,6 +29,13 @@ public class PublishMessage(HttpClient httpClient, ServiceBusClient serviceBusCl
             }
             
             var formData = await req.ReadFromJsonAsync<ContactFormMessage>();
+            
+            if (formData is null)
+            {
+                return new BadRequestObjectResult("Unable to read contact form message.");
+            }
+            
+            logger.LogInformation("Received contact form data: {FormData}", JsonSerializer.Serialize(formData));
 
             ValidateFormData(formData);
 
@@ -49,7 +56,8 @@ public class PublishMessage(HttpClient httpClient, ServiceBusClient serviceBusCl
                 
                 // Set metadata values
                 id = Guid.NewGuid(),
-                timestamp = DateTimeOffset.UtcNow
+                timestamp = DateTimeOffset.UtcNow,
+                ipaddress = formData.IpAddress
             });
             
             return new OkResult();
@@ -83,7 +91,7 @@ public class PublishMessage(HttpClient httpClient, ServiceBusClient serviceBusCl
     /// </summary>
     /// <param name="hCaptchaToken">The hCaptcha token to verify.</param>
     /// <returns>A boolean indicating whether the hCaptcha verification was successful.</returns>
-    private async Task<bool> VerifyHCaptchaAsync(string hCaptchaToken)
+    private async Task<bool> VerifyHCaptchaAsync(string? hCaptchaToken)
     {
         try
         {

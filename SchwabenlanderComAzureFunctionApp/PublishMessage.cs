@@ -17,7 +17,7 @@ public class PublishMessage(HttpClient httpClient, ServiceBusClient serviceBusCl
     /// <returns>An IActionResult indicating the result of the operation.</returns>
     [Function("PublishMessage")]
     public async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "post")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post")]
         HttpRequest req)
     {
         try
